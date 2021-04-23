@@ -9,7 +9,7 @@ def ingredients_search(ing):
     con = sqlite3.connect("recipes_db.db")
     cur = con.cursor()
     result = cur.execute("""SELECT id, ingredients FROM recipes""").fetchall()
-    #print(result)
+    # print(result)
     con.close()
 
     identical_recipes_id = list()  # id рецептов с точно такими же ингредиентами
@@ -38,9 +38,9 @@ def tags_search(t):
         tags.add(tag)
 
     con = sqlite3.connect("recipes_db.db")
+
     cur = con.cursor()
     result = cur.execute("""SELECT id, tags FROM recipes""").fetchall()
-    print(result)
     con.close()
 
     tags_recipes_id = list()  # id рецептов с нужными тегами
@@ -55,9 +55,13 @@ def tags_search(t):
 def random_recipes():
     con = sqlite3.connect("recipes_db.db")
     cur = con.cursor()
+
     result = cur.execute("""SELECT id FROM recipes""").fetchall()
-    print(result)
+    result = list(map(lambda x: x[0], result))
+
     con.close()
 
+    return choice(result)
 
-tags_search('завтрак')
+
+print(ingredients_search('яйцо, йцу'))  # чет не так
