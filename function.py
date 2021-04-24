@@ -9,7 +9,7 @@ def ingredients_search(ing):
     con = sqlite3.connect("recipes_db.db")
     cur = con.cursor()
     result = cur.execute("""SELECT id, ingredients FROM recipes""").fetchall()
-    # print(result)
+    print(result)
     con.close()
 
     identical_recipes_id = list()  # id рецептов с точно такими же ингредиентами

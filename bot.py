@@ -14,8 +14,11 @@ def send_message(vk, event, message):
 
 
 def main():
+    with open('C:/Users/Alex/Desktop/k.txt', 'r') as f:
+        key = f.read()
+
     vk_session = vk_api.VkApi(
-        token='a2467aba7103f6a9a6cbce79ea26aef5d8e5cfa8687f54cb633d3937798989a268b9dc005dcd646330d44')
+        token=key)
 
     longpoll = VkBotLongPoll(vk_session, 204122708, wait=1)
     vk = vk_session.get_api()
