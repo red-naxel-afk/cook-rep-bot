@@ -140,6 +140,22 @@ def main():
                                f"\n~------------------------------------------------------" \
                                f"\nДля нахождения блюда воспользуйтесь поиском 🔎"
                         send_message(vk, event, menu)
+                    elif text == 'случайное постное меню':
+                        menu_id = vegetarian_menu()
+                        menu_names = list()
+                        for i in menu_id:
+                            con = sqlite3.connect("recipes_db.db")
+                            cur = con.cursor()
+                            result = cur.execute("""SELECT name FROM recipes WHERE id=?""", (i, )).fetchall()
+                            menu_names.append(result[0])
+                            con.close()
+                        menu = f"Вегетарианское случайное меню:\nЗавтрак:\n-{menu_names[0][0]}\n-{menu_names[1][0]}" \
+                               f"\nОбед:\n-{menu_names[2][0]}" \
+                               f"\nПерекус:\n  -{menu_names[3][0]}" \
+                               f"\nУжин:\n  -{menu_names[4][0]}\n-{menu_names[5][0]}" \
+                               f"\n~------------------------------------------------------" \
+                               f"\nДля нахождения блюда воспользуйтесь поиском 🔎"
+                        send_message(vk, event, menu)
                     elif text == 'таймер':
                         users_states[user_id][0] = 'setting_timer'
                         send_message(vk, event, 'На сколько секунд?')
