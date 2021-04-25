@@ -72,3 +72,42 @@ def random_recipes():
     con.close()
 
     return choice(result)
+
+def daily_menu():
+    con = sqlite3.connect("recipes_db.db")
+    cur = con.cursor()
+    result = cur.execute("""SELECT id, tags FROM recipes""").fetchall()
+    con.close()
+
+    menu = {}
+    breakfast_drink = list()
+    breakfast_meal = list()
+    dinner_meal = list()
+    afternoon_snack = list()
+    supper_meal = list()
+    supper_snack = list()
+    supper_dessert = list()
+    for i in result:
+        if 'завтрак' in i[1].split(';') and 'напиток' in i[1].split(';'):
+            breakfast_drink.append(i[0])
+        if 'завтрак' in i[1].split(';') and 'напиток' not in i[1].split(';'):
+            breakfast_meal.append(i[0])
+        if 'обед' in i[1].split(';'):
+            dinner_meal.append(i[0])
+        if 'закуска' in i[1].split(';') and 'сладкое' not in i[1].split(';'):
+            afternoon_snack.append(i[0])
+        if 'ужин' in i[1].split(';'):
+            supper_meal.append(i[0])
+        if 'закуска' in i[1].split(';'):
+            supper_snack.append(i[0])
+        if 'десерт' in i[1].split(';'):
+            supper_dessert.append(i[0])
+    menu_list = [breakfast_drink, breakfast_meal, dinner_meal, afternoon_snack,
+                 supper_meal, supper_snack, supper_dessert]
+    menu_id = list()
+    for i in menu_list:
+        rnd = choice(i)
+        while rnd in menu_list:
+            rnd = choice(i)
+        menu_id.append(rnd)
+    return menu_id

@@ -115,7 +115,20 @@ def main():
                         random_recipes_id = random_recipes()
                         send_message(vk, event, recipes_message(random_recipes_id))
                     elif text == 'меню дня':
-                        pass
+                        menu_id = daily_menu()
+                        menu_names = list()
+                        for i in menu_id:
+                            con = sqlite3.connect("recipes_db.db")
+                            cur = con.cursor()
+                            result = cur.execute("""SELECT name FROM recipes WHERE id=?""", (i, )).fetchall()
+                            menu_names.append(result[0])
+                            con.close()
+                        menu = f"Меню дня:\n  Завтрак:\n  -{menu_names[0]}\n  -{menu_names[1]}" \
+                               f"\n  Обед:\n  -{menu_names[2]}" \
+                               f"\n  Перекус:\n  -{menu_names[3]}" \
+                               f"\n  Ужин:\n  -{menu_names[4]}\n  -{menu_names[5]}\n  -{menu_names[6]}" \
+                               f"\n~------------------------------------------------------" \
+                               f"\nДля поиска блюда воспользуйтесь поиском 🔎"
                     elif text == 'таймер':
                         users_states[user_id][0] = 'setting_timer'
                         send_message(vk, event, 'На сколько секунд?')
