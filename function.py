@@ -73,6 +73,7 @@ def random_recipes():
 
     return choice(result)
 
+
 def daily_menu():
     con = sqlite3.connect("recipes_db.db")
     cur = con.cursor()
