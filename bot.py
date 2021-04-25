@@ -13,6 +13,47 @@ def send_message(vk, event, message):
                      random_id=random.randint(0, 2 ** 64))
 
 
+def recipes_message(id_r):
+    con = sqlite3.connect("recipes_db.db")
+    cur = con.cursor()
+
+    result = cur.execute("""SELECT name, ingredients, ingredients_count, steps, time, tags, video_url FROM recipes 
+                            WHERE id = {}""".format(str(id_r))).fetchall()[0]
+    con.close()
+    mes = "Рецепт: " + result[0] + " \n\nИнгредиенты: \n"
+
+    ing_list = result[1].split(';')
+    count_list = result[2].split(';')
+    steps_list = result[3].split(';')
+    cooking_time = result[4]
+    tags = result[5].split(';')
+    url = result[6]
+
+    for ing in range(len(ing_list)):
+        mes += '-- ' + ing_list[ing]
+
+        if count_list[ing] != '-':
+            mes += ' - ' + count_list[ing]
+        mes += '\n'
+
+    mes += '\nПриготовление: \n\n'
+
+    for step in steps_list:
+        mes += "-- " + step + '\n'
+
+    mes += "\nВремя приготовления: " + cooking_time + '\n\n'
+
+    mes += "Теги: \n"
+
+    for tag in tags:
+        mes += "-- " + tag + '\n'
+
+    mes += "\nВидео: \n"
+    mes += '\n' + url
+
+    return mes
+
+
 def main():
     with open('C:/Users/Alex/Desktop/k.txt', 'r') as f:
         key = f.read()
@@ -57,9 +98,22 @@ def main():
                                  Изменить         - открывает меню изменения списка покупок'''
                         send_message(vk, event, mes)
                     elif text == 'поиск':
-                        pass
+                        users_states[user_id][0] = 'search'
+                        send_message(vk, event, '''Помощь   - выводит это сообщение
+                                                   ~------------------------------------------------------
+                                                   Название   - поиск рецепта по названию
+                                                   Например: Название <позиция>
+                                                   ~------------------------------------------------------
+                                                   Тег - поиск рецепта по тегу
+                                                   Например: Тег <позиция, позиция>
+                                                   ~------------------------------------------------------
+                                                   ингредиент   - поиск рецепта по ингредиент
+                                                   Например: ингредиенты <позиция, позиция>
+                                                   ~------------------------------------------------------
+                                                   Отмена   - выход из режима поиска''')
                     elif text == 'случайный рецепт':
-                        pass
+                        random_recipes_id = random_recipes()
+                        send_message(vk, event, recipes_message(random_recipes_id))
                     elif text == 'меню дня':
                         pass
                     elif text == 'таймер':
@@ -148,6 +202,45 @@ def main():
                                 send_message(vk, event, 'Удалено из списка: ' + text.split()[1])
                             else:
                                 send_message(vk, event, 'В списке продуктов нет такой позиции')
+                    else:
+                        send_message(vk, event, '''Неизвестное мне сообщение
+                                                Посмотреть мои функции можно введя "Помощь"''')
+                elif users_states[user_id][0] == 'search':
+                    if text == 'отмена':
+                        send_message(vk, event, 'Отменено')
+                        users_states[user_id][0] = ''
+                    elif text == 'помощь':
+                        send_message(vk, event, '''Помощь   - выводит это сообщение
+                                                   ~------------------------------------------------------
+                                                   Название   - поиск рецепта по названию
+                                                   Например: Название <позиция>
+                                                   ~------------------------------------------------------
+                                                   Тег - поиск рецепта по тегу
+                                                   Например: Тег <позиция, позиция>
+                                                   ~------------------------------------------------------
+                                                   ингредиент   - поиск рецепта по ингредиент
+                                                   Например: ингредиенты <позиция, позиция>
+                                                   ~------------------------------------------------------
+                                                   Отмена   - выход из режима поиска''')
+                    elif text.split()[0] == 'название':
+                        if len(text.split()) == 1:
+                            send_message(vk, event, 'Пожалуйста укажите позицию')
+                        else:
+                            con = sqlite3.connect("recipes_db.db")
+
+                            cur = con.cursor()
+                            result = cur.execute(
+                                """SELECT id FROM recipes WHERE name = '{}'""".format(text.split()[1])).fetchall()
+                            print(result)
+                            con.close()
+
+                            send_message(vk, event, 'Добавлено в список: ' + text.split()[1])
+                    elif text.split()[0] == 'тег':
+                        if len(text.split()) == 1:
+                            send_message(vk, event, 'Пожалуйста укажите позицию')
+                        else:
+                            users_states[user_id][2].append(text.split()[1])
+                            send_message(vk, event, 'Добавлено в список: ' + text.split()[1])
                     else:
                         send_message(vk, event, '''Неизвестное мне сообщение
                                                 Посмотреть мои функции можно введя "Помощь"''')

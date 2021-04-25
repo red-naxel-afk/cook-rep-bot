@@ -23,9 +23,9 @@ def ingredients_search(ing):
         ingredients.sort()
 
         if ing_list == ingredients:
-            identical_recipes.append(rec)
+            identical_recipes.append(rec[0])
         elif set(ing_list) & set(ingredients) != set():
-            similar_recipes.append(rec)
+            similar_recipes.append(rec[0])
 
     # print(identical_recipes)
     # print(similar_recipes)
@@ -54,10 +54,10 @@ def tags_search(t):
 
         tags_list = set(tags_list)
 
-        if tags_list & tags == tags:
-            identical_tags_recipes.append(rec)
+        if tags == tags_list:
+            identical_tags_recipes.append(rec[0])
         elif tags_list & tags != set():
-            similar_tags_recipes.append(rec)
+            similar_tags_recipes.append(rec[0])
 
     return identical_tags_recipes, similar_tags_recipes
 
