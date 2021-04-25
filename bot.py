@@ -25,7 +25,7 @@ def recipes_message(id_r):
     ing_list = result[1].split(';')
     count_list = result[2].split(';')
     steps_list = result[3].split(';')
-    cooking_time = result[4]
+    cooking_time = int(result[4])
     tags = result[5].split(';')
     url = result[6]
 
@@ -41,7 +41,18 @@ def recipes_message(id_r):
     for step in steps_list:
         mes += "-- " + step + '\n'
 
-    mes += "\nВремя приготовления: " + cooking_time + '\n\n'
+    out = ''
+
+    if cooking_time % 60 != 0:
+        out += str(cooking_time % 60) + 'секунд'
+
+    if cooking_time // 60 > 0:
+        out = str((cooking_time // 60) % 60) + ' минут ' + out
+
+    if (cooking_time // 60) // 60 > 0:
+        out = str((cooking_time // 60) // 60) + ' часов ' + out
+
+    mes += "\nВремя приготовления: " + out + '\n\n'
 
     mes += "Теги: \n"
 
@@ -123,7 +134,10 @@ def main():
                         if users_states[user_id][1] != -1:
                             seconds_to_over = int(users_states[user_id][1] - time.time())
 
-                            out = str(seconds_to_over % 60) + 'секунд'
+                            out = ''
+
+                            if seconds_to_over % 60 != 0:
+                                out += str(seconds_to_over % 60) + 'секунд'
 
                             if seconds_to_over // 60 > 0:
                                 out = str((seconds_to_over // 60) % 60) + ' минут ' + out
@@ -226,15 +240,23 @@ def main():
                         if len(text.split()) == 1:
                             send_message(vk, event, 'Пожалуйста укажите позицию')
                         else:
+                            name = text.split()[1:]
+
+                            name = ' '.join(name).capitalize()
+                            print(name)
+
                             con = sqlite3.connect("recipes_db.db")
 
                             cur = con.cursor()
-                            result = cur.execute(
-                                """SELECT id FROM recipes WHERE name = '{}'""".format(text.split()[1])).fetchall()
-                            print(result)
+                            result = cur.execute("""SELECT id FROM recipes 
+                            WHERE name = '{}'""".format(name)).fetchall()
                             con.close()
 
-                            send_message(vk, event, 'Добавлено в список: ' + text.split()[1])
+                            if len(result) != 0:
+                                send_message(vk, event, recipes_message(result[0][0]))
+                            else:
+                                send_message(vk, event, 'Такого рецепта не нашлось')
+
                     elif text.split()[0] == 'тег':
                         if len(text.split()) == 1:
                             send_message(vk, event, 'Пожалуйста укажите позицию')
