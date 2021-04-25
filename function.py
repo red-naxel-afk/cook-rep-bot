@@ -8,7 +8,7 @@ def ingredients_search(ing):
 
     con = sqlite3.connect("recipes_db.db")
     cur = con.cursor()
-    result = cur.execute("""SELECT id, ingredients FROM recipes""").fetchall()
+    result = cur.execute("""SELECT id, ingredients, name FROM recipes""").fetchall()
 
     # print(result)
     con.close()
@@ -23,9 +23,9 @@ def ingredients_search(ing):
         ingredients.sort()
 
         if ing_list == ingredients:
-            identical_recipes.append(rec[0])
+            identical_recipes.append((rec[0], rec[2]))
         elif set(ing_list) & set(ingredients) != set():
-            similar_recipes.append(rec[0])
+            similar_recipes.append((rec[0], rec[2]))
 
     # print(identical_recipes)
     # print(similar_recipes)
@@ -41,7 +41,7 @@ def tags_search(t):
     con = sqlite3.connect("recipes_db.db")
 
     cur = con.cursor()
-    result = cur.execute("""SELECT id, tags FROM recipes""").fetchall()
+    result = cur.execute("""SELECT id, tags, name FROM recipes""").fetchall()
     # print(result)
     con.close()
 
@@ -55,9 +55,9 @@ def tags_search(t):
         tags_list = set(tags_list)
 
         if tags == tags_list:
-            identical_tags_recipes.append(rec[0])
+            identical_tags_recipes.append((rec[0], rec[2]))
         elif tags_list & tags != set():
-            similar_tags_recipes.append(rec[0])
+            similar_tags_recipes.append((rec[0], rec[2]))
 
     return identical_tags_recipes, similar_tags_recipes
 

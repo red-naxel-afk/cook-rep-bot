@@ -90,7 +90,8 @@ def main():
                 text = event.obj.message['text'].lower()
 
                 if user_id not in users_states:
-                    users_states[user_id] = ['', -1, []]  # состояние, время таймера
+                    users_states[user_id] = ['', -1, [], {'identical_recipes': [],
+                                                          'similar_recipes': []}]  # состояние, время таймера
 
                 if users_states[user_id][0] == '':  # если пользователь ничего не сделал
                     if text == 'помощь':
@@ -118,7 +119,7 @@ def main():
                                                    Тег - поиск рецепта по тегу
                                                    Например: Тег <позиция, позиция>
                                                    ~------------------------------------------------------
-                                                   ингредиент   - поиск рецепта по ингредиент
+                                                   Ингредиент   - поиск рецепта по ингредиент
                                                    Например: ингредиенты <позиция, позиция>
                                                    ~------------------------------------------------------
                                                    Отмена   - выход из режима поиска''')
@@ -232,7 +233,7 @@ def main():
                                                    Тег - поиск рецепта по тегу
                                                    Например: Тег <позиция, позиция>
                                                    ~------------------------------------------------------
-                                                   ингредиент   - поиск рецепта по ингредиент
+                                                   Ингредиент   - поиск рецепта по ингредиент
                                                    Например: ингредиенты <позиция, позиция>
                                                    ~------------------------------------------------------
                                                    Отмена   - выход из режима поиска''')
@@ -243,7 +244,6 @@ def main():
                             name = text.split()[1:]
 
                             name = ' '.join(name).capitalize()
-                            print(name)
 
                             con = sqlite3.connect("recipes_db.db")
 
@@ -261,8 +261,40 @@ def main():
                         if len(text.split()) == 1:
                             send_message(vk, event, 'Пожалуйста укажите позицию')
                         else:
-                            users_states[user_id][2].append(text.split()[1])
-                            send_message(vk, event, 'Добавлено в список: ' + text.split()[1])
+                            tags = text.split()[1:]
+                            tags = ' '.join(tags).split(', ')
+
+                            tags = ';'.join(tags)
+
+                            identical_recipes, similar_recipes = tags_search(tags)
+
+                            if len(identical_recipes) == 0 and len(similar_recipes) == 0:
+                                send_message(vk, event, '''Таких рецептов нет
+                                                           Убедитесь, что введены правильные теги''')
+                            else:
+                                mes = ''
+                                if len(identical_recipes) == 0:
+                                    mes += 'Рецептов с введёнными ингредиентами нет \n\n'
+                                else:
+                                    mes += 'Рецепты только с введёнными ингредиентами: \n\n'
+
+                                    for r in identical_recipes:
+                                        mes += '-- ' + r[1] + '\n'
+
+                                    mes += '\n'
+
+                                if len(similar_recipes) == 0:
+                                    mes += 'Рецептов и с другими ингредиентами нет\n\n'
+                                else:
+                                    mes += 'Рецепты и с другими ингредиентами: \n\n'
+
+                                    for r in similar_recipes:
+                                        mes += '-- ' + r[1] + '\n'
+
+                                    mes += '\n'
+
+                                send_message(vk, event, mes)
+
                     else:
                         send_message(vk, event, '''Неизвестное мне сообщение
                                                 Посмотреть мои функции можно введя "Помощь"''')
