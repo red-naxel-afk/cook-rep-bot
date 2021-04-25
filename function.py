@@ -4,11 +4,12 @@ from random import choice
 
 # поиск по ингридиентам
 def ingredients_search(ing):
-    ingredients = ing.lower().split(',')
+    ingredients = ing.lower().split(';')
 
     con = sqlite3.connect("recipes_db.db")
     cur = con.cursor()
     result = cur.execute("""SELECT id, ingredients FROM recipes""").fetchall()
+
     print(result)
     con.close()
 
@@ -48,7 +49,7 @@ def tags_search(t):
     for rec in result:  # отбор рецептов с нужными тегами
         if set(rec[1].split(';')) & tags == tags:
             tags_recipes_id.append(rec[0])
-    # print(tags_recipes_id)
+    print(tags_recipes_id)
     return tags_recipes_id
 
 
@@ -64,4 +65,4 @@ def random_recipes():
     return choice(result)
 
 
-print(ingredients_search('яйцо, йцу'))  # чет не так
+print(ingredients_search('яйцо;соль'))  # чет не так
