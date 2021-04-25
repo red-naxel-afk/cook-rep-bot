@@ -66,11 +66,9 @@ def recipes_message(id_r):
 
 
 def main():
-    with open('C:/Users/Alex/Desktop/k.txt', 'r') as f:
-        key = f.read()
 
     vk_session = vk_api.VkApi(
-        token=key)
+        token='8b1b7cf17ac165f837a7282120e6d616cd6a4ed0a167fe81bdd6e9d7db4c7a59f81d1d419120f2c70f348')
 
     longpoll = VkBotLongPoll(vk_session, 204122708, wait=1)
     vk = vk_session.get_api()
@@ -126,7 +124,7 @@ def main():
                     elif text == 'случайный рецепт':
                         random_recipes_id = random_recipes()
                         send_message(vk, event, recipes_message(random_recipes_id))
-                    elif text == 'меню дня':
+                    elif text == 'случайное меню':
                         menu_id = daily_menu()
                         menu_names = list()
                         for i in menu_id:
@@ -135,12 +133,13 @@ def main():
                             result = cur.execute("""SELECT name FROM recipes WHERE id=?""", (i, )).fetchall()
                             menu_names.append(result[0])
                             con.close()
-                        menu = f"Меню дня:\n  Завтрак:\n  -{menu_names[0]}\n  -{menu_names[1]}" \
-                               f"\n  Обед:\n  -{menu_names[2]}" \
-                               f"\n  Перекус:\n  -{menu_names[3]}" \
-                               f"\n  Ужин:\n  -{menu_names[4]}\n  -{menu_names[5]}\n  -{menu_names[6]}" \
+                        menu = f"Случайное меню:\nЗавтрак:\n-{menu_names[0][0]}\n-{menu_names[1][0]}" \
+                               f"\nОбед:\n-{menu_names[2][0]}" \
+                               f"\nПерекус:\n  -{menu_names[3][0]}" \
+                               f"\nУжин:\n  -{menu_names[4][0]}\n-{menu_names[5][0]}\n-{menu_names[6][0]}" \
                                f"\n~------------------------------------------------------" \
-                               f"\nДля поиска блюда воспользуйтесь поиском 🔎"
+                               f"\nДля нахождения блюда воспользуйтесь поиском 🔎"
+                        send_message(vk, event, menu)
                     elif text == 'таймер':
                         users_states[user_id][0] = 'setting_timer'
                         send_message(vk, event, 'На сколько секунд?')
