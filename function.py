@@ -10,47 +10,56 @@ def ingredients_search(ing):
     cur = con.cursor()
     result = cur.execute("""SELECT id, ingredients FROM recipes""").fetchall()
 
-    print(result)
+    # print(result)
     con.close()
 
-    identical_recipes_id = list()  # id рецептов с точно такими же ингредиентами
-    similar_recipes_id = list()  # id рецептов с этими же ингредиентами, но там есть и другие ингредиенты
+    identical_recipes = list()  # id рецептов с точно такими же ингредиентами
+    similar_recipes = list()  # id рецептов с этими же ингредиентами, но там есть и другие ингредиенты
 
     for rec in result:  # отбор рецептов с нужными ингредиентами
-        fl = True
-        for i in ingredients:
-            if i not in rec[1].lower():
-                fl = False
-                break
-        if fl and len(ingredients) == len(rec[1].split(', ')):
-            identical_recipes_id.append(rec[0])
-        elif fl:
-            similar_recipes_id.append(rec[0])
+        ing_list = list(map(lambda x: x.lower(), rec[1].split(';')))
+        ing_list.sort()
 
-    # print(identical_recipes_id)
-    # print(similar_recipes_id)
-    return identical_recipes_id, similar_recipes_id
+        ingredients.sort()
+
+        if ing_list == ingredients:
+            identical_recipes.append(rec)
+        elif set(ing_list) & set(ingredients) != set():
+            similar_recipes.append(rec)
+
+    # print(identical_recipes)
+    # print(similar_recipes)
+    return identical_recipes, similar_recipes
 
 
 # поиск по тегам
 def tags_search(t):
-    tags = set()  # введённые теги
-    for tag in t.lower().split(', '):
-        tags.add(tag)
+    tags = list(map(lambda x: x.lower(), t.split(';')))  # введённые теги
+    tags.sort()
+    tags = set(tags)
 
     con = sqlite3.connect("recipes_db.db")
 
     cur = con.cursor()
     result = cur.execute("""SELECT id, tags FROM recipes""").fetchall()
+    # print(result)
     con.close()
 
-    tags_recipes_id = list()  # id рецептов с нужными тегами
+    identical_tags_recipes = list()
+    similar_tags_recipes = list()
 
     for rec in result:  # отбор рецептов с нужными тегами
-        if set(rec[1].split(';')) & tags == tags:
-            tags_recipes_id.append(rec[0])
-    print(tags_recipes_id)
-    return tags_recipes_id
+        tags_list = rec[1].split(';')
+        tags_list.sort()
+
+        tags_list = set(tags_list)
+
+        if tags_list & tags == tags:
+            identical_tags_recipes.append(rec)
+        elif tags_list & tags != set():
+            similar_tags_recipes.append(rec)
+
+    return identical_tags_recipes, similar_tags_recipes
 
 
 def random_recipes():
@@ -63,6 +72,3 @@ def random_recipes():
     con.close()
 
     return choice(result)
-
-
-print(ingredients_search('яйцо;соль'))  # чет не так
