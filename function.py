@@ -112,3 +112,97 @@ def daily_menu():
             rnd = choice(i)
         menu_id.append(rnd)
     return menu_id
+
+
+def vegetarian_menu():
+    con = sqlite3.connect("recipes_db.db")
+    cur = con.cursor()
+    result = cur.execute("""SELECT id, tags FROM recipes""").fetchall()
+    con.close()
+
+    menu = {}
+    breakfast_drink = list()
+    breakfast_meal = list()
+    dinner_meal = list()
+    afternoon_snack = list()
+    supper_meal = list()
+    supper_snack = list()
+    for i in result:
+        if 'завтрак' in i[1].split(';') and 'напиток' in i[1].split(';'):
+            breakfast_drink.append(i[0])
+        if 'завтрак' in i[1].split(';') and 'напиток' not in i[1].split(';') and 'мясо' not in i[1].split(';'):
+            breakfast_meal.append(i[0])
+        if 'обед' in i[1].split(';') and 'мясо' not in i[1].split(';'):
+            dinner_meal.append(i[0])
+        if 'закуска' in i[1].split(';') and 'сладкое' not in i[1].split(';') and 'мясо' not in i[1].split(';'):
+            afternoon_snack.append(i[0])
+        if 'ужин' in i[1].split(';') and 'мясо' not in i[1].split(';'):
+            supper_meal.append(i[0])
+        if 'закуска' in i[1].split(';') and 'мясо' not in i[1].split(';'):
+            supper_snack.append(i[0])
+    menu_list = [breakfast_drink, breakfast_meal, dinner_meal, afternoon_snack,
+                 supper_meal, supper_snack]
+    menu_id = list()
+    for i in menu_list:
+        rnd = choice(i)
+        while rnd in menu_id:
+            rnd = choice(i)
+        menu_id.append(rnd)
+    return menu_id
+
+
+def add_to_favorite(u_id, name):
+    con = sqlite3.connect("recipes_db.db")
+    cur = con.cursor()
+    rec_id = cur.execute("""SELECT id FROM recipes WHERE name=?""", (name.capitalize(),)).fetchone()
+    if rec_id is not None:
+        res = cur.execute("""SELECT favorite FROM users_information WHERE u_id=?""", (u_id,)).fetchone()
+        if res:
+            if str(rec_id[0]) not in res[0].split(';'):
+                rec_ids = f"{res[0]};{rec_id[0]}"
+                cur.execute("""UPDATE users_information SET favorite=? WHERE u_id=?""", (rec_ids, u_id)).fetchall()
+            else:
+                return 'Этот рецепт уже добавлен в избранное 🤔'
+        else:
+            cur.execute("""INSERT INTO users_information(u_id,favorite) VALUES(?,?)""", (u_id, rec_id[0])).fetchall()
+        con.commit()
+        con.close()
+        return "Рецепт добавлен!"
+    return "Такого рецепта у нас нет 😣"
+
+
+def delete_from_favorite(u_id, name):
+    con = sqlite3.connect("recipes_db.db")
+    cur = con.cursor()
+    rec_id = cur.execute("""SELECT id FROM recipes WHERE name=?""", (name.capitalize(),)).fetchone()
+    if rec_id is not None:
+        res = cur.execute("""SELECT favorite FROM users_information WHERE u_id=?""", (u_id,)).fetchone()
+        if res[0] != '':
+            if str(rec_id[0]) in res[0].split(';'):
+                ids = res[0].split(';')
+                del ids[ids.index(str(rec_id[0]))]
+                rec_ids = ';'.join(ids)
+                cur.execute("""UPDATE users_information SET favorite=? WHERE u_id=?""", (rec_ids, u_id)).fetchall()
+                con.commit()
+                con.close()
+                return 'Рецепт убран!'
+            else:
+                return 'Этого рецепта нет в избранном 🤔'
+        else:
+            return 'У вас нет рецептов в избранном'
+    return "Такого рецепта у нас нет 😣"
+
+
+def favorite_list(u_id):
+    con = sqlite3.connect("recipes_db.db")
+    cur = con.cursor()
+    res = cur.execute("""SELECT favorite FROM users_information WHERE u_id=?""", (u_id,)).fetchone()[0]
+    if res != '':
+        txt = 'Избранное:'
+        for i in res.split(';'):
+            if i != '':
+                r = cur.execute("""SELECT name FROM recipes WHERE id=?""", (i,)).fetchone()[0]
+                txt += f"\n— {r}"
+        return txt
+    else:
+        return "В избранном ничего нет"
