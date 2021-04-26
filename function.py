@@ -1,5 +1,65 @@
 import sqlite3
+
+import random
 from random import choice
+
+
+def send_message(vk, event, message):
+    vk.messages.send(user_id=event.obj.message['from_id'],
+                     message=message,
+                     random_id=random.randint(0, 2 ** 64))
+
+
+def recipes_message(id_r):
+    con = sqlite3.connect("recipes_db.db")
+    cur = con.cursor()
+
+    result = cur.execute("""SELECT name, ingredients, ingredients_count, steps, time, tags, video_url FROM recipes 
+                            WHERE id = {}""".format(str(id_r))).fetchall()[0]
+    con.close()
+    mes = "Рецепт: " + result[0] + " \n\nИнгредиенты: \n"
+
+    ing_list = result[1].split(';')
+    count_list = result[2].split(';')
+    steps_list = result[3].split(';')
+    cooking_time = int(result[4])
+    tags = result[5].split(';')
+    url = result[6]
+
+    for ing in range(len(ing_list)):
+        mes += '-- ' + ing_list[ing]
+
+        if count_list[ing] != '-':
+            mes += ' - ' + count_list[ing]
+        mes += '\n'
+
+    mes += '\nПриготовление: \n\n'
+
+    for step in steps_list:
+        mes += "-- " + step + '\n'
+
+    out = ''
+
+    if cooking_time % 60 != 0:
+        out += str(cooking_time % 60) + 'секунд'
+
+    if cooking_time // 60 > 0:
+        out = str((cooking_time // 60) % 60) + ' минут ' + out
+
+    if (cooking_time // 60) // 60 > 0:
+        out = str((cooking_time // 60) // 60) + ' часов ' + out
+
+    mes += "\nВремя приготовления: " + out + '\n\n'
+
+    mes += "Теги: \n"
+
+    for tag in tags:
+        mes += "-- " + tag + '\n'
+
+    mes += "\nВидео: \n"
+    mes += '\n' + url
+
+    return mes
 
 
 # поиск по ингридиентам
@@ -212,4 +272,3 @@ def favorite_list(u_id):
         return txt
     else:
         return "В избранном ничего нет"
-
