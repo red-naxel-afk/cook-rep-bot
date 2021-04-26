@@ -434,9 +434,9 @@ def main():
 
                         toponym_coodrinates = toponym_coodrinates.split(' ')
 
-                        toponym_coodrinates[0], toponym_coodrinates[1] = toponym_coodrinates[1], toponym_coodrinates[0]
-
                         toponym_coodrinates = ','.join(toponym_coodrinates)
+
+                        print(toponym_coodrinates)
 
                         search_api_server = "https://search-maps.yandex.ru/v1/"
                         api_key = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
