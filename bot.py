@@ -3,6 +3,7 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
 import time
 import random
+import requests
 
 from function import *
 
@@ -66,7 +67,6 @@ def recipes_message(id_r):
 
 
 def main():
-
     vk_session = vk_api.VkApi(
         token='8b1b7cf17ac165f837a7282120e6d616cd6a4ed0a167fe81bdd6e9d7db4c7a59f81d1d419120f2c70f348')
 
@@ -186,7 +186,8 @@ def main():
                         else:
                             send_message(vk, event, 'Таймер не заведен')
                     elif text == 'магазины':
-                        pass
+                        users_states[user_id][0] = 'mag_search'
+                        send_message(vk, event, 'Введите ваш адрес')
                     elif text == 'список':
                         if not users_states[user_id][2]:
                             send_message(vk, event, 'Список покупок пуст')
@@ -417,6 +418,63 @@ def main():
                     else:
                         send_message(vk, event, '''Неизвестное мне сообщение
                                                 Посмотреть мои функции можно введя "Помощь"''')
+                elif users_states[user_id][0] == 'mag_search':
+                    ad = text.lower()
+
+                    geocoder_request = "http://geocode-maps.yandex.ru/1.x/?"
+                    geocoder_request += "apikey=40d1649f-0493-4b70-98ba-98533de7710b&geocode=" + ad + "&format=json"
+
+                    response = requests.get(geocoder_request)
+                    if response:
+                        json_response = response.json()
+
+                        toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
+
+                        toponym_coodrinates = toponym["Point"]["pos"]
+
+                        toponym_coodrinates = toponym_coodrinates.split(' ')
+
+                        toponym_coodrinates[0], toponym_coodrinates[1] = toponym_coodrinates[1], toponym_coodrinates[0]
+
+                        toponym_coodrinates = ','.join(toponym_coodrinates)
+
+                        search_api_server = "https://search-maps.yandex.ru/v1/"
+                        api_key = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
+
+                        address_ll = toponym_coodrinates
+
+                        search_params = {
+                            "apikey": api_key,
+                            "text": "магазин",
+                            "lang": "ru_RU",
+                            "ll": address_ll,
+                            "type": "biz"
+                        }
+
+                        response = requests.get(search_api_server, params=search_params)
+
+                        if response:
+
+                            json_response = response.json()
+
+                            mes = '~-------------------------------------------------------\n'
+
+                            for i in json_response["features"]:
+                                toponym_name = i["properties"]["CompanyMetaData"]["name"]
+
+                                toponym_address = i["properties"]["CompanyMetaData"]["address"]
+                                toponym_time = i["properties"]["CompanyMetaData"]["Hours"]["text"]
+
+                                mes += toponym_name + '\n'
+                                mes += ' '.join(toponym_address.split(', ')[2:]) + '\n'
+                                mes += toponym_time + '\n'
+                                mes += '~-------------------------------------------------------\n'
+                            send_message(vk, event, mes)
+                        else:
+                            send_message(vk, event, 'Упс! Похоже что-то сломалось')
+                    else:
+                        send_message(vk, event, 'Упс! Похоже что-то сломалось')
+                    users_states[user_id][0] = ''
 
 
 if __name__ == '__main__':
