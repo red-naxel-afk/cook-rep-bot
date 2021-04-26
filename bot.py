@@ -66,7 +66,6 @@ def recipes_message(id_r):
 
 
 def main():
-
     vk_session = vk_api.VkApi(
         token='8b1b7cf17ac165f837a7282120e6d616cd6a4ed0a167fe81bdd6e9d7db4c7a59f81d1d419120f2c70f348')
 
@@ -98,6 +97,7 @@ def main():
                                  Поиск            - позволяет найти нужный рецепт
                                  Случайный рецепт - выводит случайный рецепт
                                  Меню дня         - выводит меню, созданное для этого дня
+                                 Избранное        - позболяет добавить рецепт в избранное
                                  ~-------------------------------------------------------
                                  Таймер           - заводит таймер
                                  Время            - показывает сколько времени осталось
@@ -130,7 +130,7 @@ def main():
                         for i in menu_id:
                             con = sqlite3.connect("recipes_db.db")
                             cur = con.cursor()
-                            result = cur.execute("""SELECT name FROM recipes WHERE id=?""", (i, )).fetchall()
+                            result = cur.execute("""SELECT name FROM recipes WHERE id=?""", (i,)).fetchall()
                             menu_names.append(result[0])
                             con.close()
                         menu = f"Случайное меню:\nЗавтрак:\n-{menu_names[0][0]}\n-{menu_names[1][0]}" \
@@ -146,7 +146,7 @@ def main():
                         for i in menu_id:
                             con = sqlite3.connect("recipes_db.db")
                             cur = con.cursor()
-                            result = cur.execute("""SELECT name FROM recipes WHERE id=?""", (i, )).fetchall()
+                            result = cur.execute("""SELECT name FROM recipes WHERE id=?""", (i,)).fetchall()
                             menu_names.append(result[0])
                             con.close()
                         menu = f"Вегетарианское случайное меню:\nЗавтрак:\n-{menu_names[0][0]}\n-{menu_names[1][0]}" \
@@ -201,6 +201,19 @@ def main():
                                                    Например: Убрать <позиция>
                                                    ~------------------------------------------------------
                                                    Отмена   - выход из режима изменения''')
+                    elif text == 'избранное':
+                        users_states[user_id][0] = 'favorite'
+                        send_message(vk, event, '''Помощь   - выводит это сообщение
+                                                   ~------------------------------------------------------
+                                                   Добавить   - добавляет рецепт в избранное
+                                                   Например: Добавить <позиция>
+                                                   ~------------------------------------------------------
+                                                   Убрать   - убирает рецепт из избранного
+                                                   Например: Убрать <позиция>
+                                                   ~------------------------------------------------------
+                                                   Посмотреть избранное - показывает избранные рецепты
+                                                   ~------------------------------------------------------
+                                                   Отмена   - выход из режима избранного''')
                     else:
                         send_message(vk, event, '''Неизвестное мне сообщение
                         Посмотреть мои функции можно введя "Помощь"''')
@@ -323,6 +336,41 @@ def main():
 
                                 send_message(vk, event, mes)
 
+                    else:
+                        send_message(vk, event, '''Неизвестное мне сообщение
+                                                Посмотреть мои функции можно введя "Помощь"''')
+                elif users_states[user_id][0] == 'favorite':
+                    if text == 'отмена':
+                        send_message(vk, event, 'Отменено')
+                        users_states[user_id][0] = ''
+                    elif text == 'помощь':
+                        send_message(vk, event, '''Помощь   - выводит это сообщение
+                                                   ~------------------------------------------------------
+                                                   Добавить   - добавляет рецепт в избранное
+                                                   Например: Добавить <позиция>
+                                                   ~------------------------------------------------------
+                                                   Убрать   - убирает рецепт из избранного
+                                                   Например: Убрать <позиция>
+                                                   ~------------------------------------------------------
+                                                   Отмена   - выход из режима избранного''')
+                    elif text.split()[0] == 'добавить':
+                        if len(text.split()) == 1:
+                            send_message(vk, event, 'Пожалуйста укажите позицию')
+                        else:
+                            name = text.split()[1:]
+                            name = ' '.join(name).capitalize()
+                            res = add_to_favorite(user_id, name)
+                            send_message(vk, event, res)
+                    elif text.split()[0] == 'убрать':
+                        if len(text.split()) == 1:
+                            send_message(vk, event, 'Пожалуйста укажите позицию')
+                        else:
+                            name = text.split()[1:]
+                            name = ' '.join(name).capitalize()
+                            res = delete_from_favorite(user_id, name)
+                            send_message(vk, event, res)
+                    elif text == 'посмотреть избранное':
+                        send_message(vk, event, favorite_list(user_id))
                     else:
                         send_message(vk, event, '''Неизвестное мне сообщение
                                                 Посмотреть мои функции можно введя "Помощь"''')
