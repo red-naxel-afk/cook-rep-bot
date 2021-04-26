@@ -155,16 +155,24 @@ def add_to_favorite(u_id, name):
     con = sqlite3.connect("recipes_db.db")
     cur = con.cursor()
     rec_id = cur.execute("""SELECT id FROM recipes WHERE name=?""", (name.capitalize(),)).fetchone()
-    if rec_id is not None:
-        res = cur.execute("""SELECT favorite FROM users_information WHERE u_id=?""", (u_id,)).fetchone()
-        if res:
-            if str(rec_id[0]) not in res[0].split(';'):
-                rec_ids = f"{res[0]};{rec_id[0]}"
-                cur.execute("""UPDATE users_information SET favorite=? WHERE u_id=?""", (rec_ids, u_id)).fetchall()
+    res = cur.execute(f"""SELECT favorite_1 FROM users_information WHERE u_id=?""", (u_id,)).fetchone()
+    if rec_id is not None and res is not None:
+        for i in range(1, 6):
+            res = cur.execute(f"""SELECT favorite_{i} FROM users_information WHERE u_id=?""", (u_id,)).fetchone()
+            if res[0] is not None:
+                if rec_id[0] in res:
+                    con.commit()
+                    con.close()
+                    return 'Этот рецепт уже добавлен в избранное 🤔'
             else:
-                return 'Этот рецепт уже добавлен в избранное 🤔'
-        else:
-            cur.execute("""INSERT INTO users_information(u_id,favorite) VALUES(?,?)""", (u_id, rec_id[0])).fetchall()
+                cur.execute(f"""UPDATE users_information SET favorite_{i}=? WHERE u_id=?""",
+                            (rec_id[0], u_id)).fetchall()
+                con.commit()
+
+                return "Рецепт добавлен!"
+        return 'Свободных мест нет 😥'
+    elif res is None:
+        cur.execute(f"""INSERT INTO users_information(u_id,favorite_1) VALUES(?,?) """, (u_id, rec_id[0])).fetchall()
         con.commit()
         con.close()
         return "Рецепт добавлен!"
@@ -175,34 +183,33 @@ def delete_from_favorite(u_id, name):
     con = sqlite3.connect("recipes_db.db")
     cur = con.cursor()
     rec_id = cur.execute("""SELECT id FROM recipes WHERE name=?""", (name.capitalize(),)).fetchone()
-    if rec_id is not None:
-        res = cur.execute("""SELECT favorite FROM users_information WHERE u_id=?""", (u_id,)).fetchone()
-        if res[0] != '':
-            if str(rec_id[0]) in res[0].split(';'):
-                ids = res[0].split(';')
-                del ids[ids.index(str(rec_id[0]))]
-                rec_ids = ';'.join(ids)
-                cur.execute("""UPDATE users_information SET favorite=? WHERE u_id=?""", (rec_ids, u_id)).fetchall()
+    res = cur.execute(f"""SELECT favorite_1 FROM users_information WHERE u_id=?""", (u_id,)).fetchone()
+    if rec_id is not None and res is not None:
+        for i in range(1, 6):
+            res = cur.execute(f"""SELECT favorite_{i} FROM users_information WHERE u_id=?""", (u_id,)).fetchone()
+            if rec_id[0] in res:
+                cur.execute(f"""UPDATE users_information SET favorite_{i}=? WHERE u_id=?""", (None, u_id)).fetchall()
                 con.commit()
                 con.close()
-                return 'Рецепт убран!'
-            else:
-                return 'Этого рецепта нет в избранном 🤔'
-        else:
-            return 'У вас нет рецептов в избранном'
+                return "Убранно!"
+        return "В избранном нет такого рецепта"
+    elif res is None:
+        return "В избранном ничего нет 😣"
     return "Такого рецепта у нас нет 😣"
 
 
 def favorite_list(u_id):
     con = sqlite3.connect("recipes_db.db")
     cur = con.cursor()
-    res = cur.execute("""SELECT favorite FROM users_information WHERE u_id=?""", (u_id,)).fetchone()[0]
-    if res != '':
+    res = cur.execute("""SELECT favorite_1 FROM users_information WHERE u_id=?""", (u_id,)).fetchone()
+    if res is not None:
         txt = 'Избранное:'
-        for i in res.split(';'):
-            if i != '':
-                r = cur.execute("""SELECT name FROM recipes WHERE id=?""", (i,)).fetchone()[0]
-                txt += f"\n— {r}"
+        for i in range(1, 6):
+            id_res = cur.execute(f"""SELECT favorite_{i} FROM users_information WHERE u_id=?""", (u_id,)).fetchone()[0]
+            if id_res is not None:
+                name_res = cur.execute(f"""SELECT name FROM recipes WHERE id=?""", (id_res,)).fetchone()[0]
+                txt += f"\n— {name_res}"
         return txt
     else:
         return "В избранном ничего нет"
+
